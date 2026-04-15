@@ -1,11 +1,8 @@
-slang_dict = {
-    "gk": "tidak",
-    "ga": "tidak",
-    "nggak": "tidak",
-    "bgt": "banget",
-    "dr": "dari",
-    "yg": "yang",
-    "tp": "tapi",
-    "dgn": "dengan",
-    "krn": "karena"
-}
+import pandas as pd
+
+slang_df = pd.read_csv("slang.csv")
+slang_dict =dict(
+    zip(
+        slang_df["slang"].str.lower().str.strip(),
+        slang_df["formal"].str.lower().str.strip()
+        ))
