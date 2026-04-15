@@ -1,9 +1,21 @@
+from pathlib import Path
 from func_prepocesing import preprocess
 import pandas as pd
 
-df = pd.read_csv("Bukit jaddih")
-df ["clean_text"] = df["reviews"].astype(str).apply(preprocess)
-df.to_csv("hasil prepocesing.csv", index=False)
+BASE_DIR = Path(__file__).resolve().parent
 
-print("Done Prepocesingnya bang")
+print("skrip jalan bg")
+df = pd.read_csv(BASE_DIR / "Bukit jaddih.csv")
+
+# Lewati baris yang text-nya null/NaN
+df = df.dropna(subset=["text"])
+
+# Rapikan, lalu buang yang kosong
+df["text"] = df["text"].astype(str).str.strip()
+df = df[df["text"] != ""]
+
+df["clean_text"] = df["text"].apply(preprocess)
+df.to_csv(BASE_DIR / "hasil_prepocesing.csv", index=False)
+
+print("Done Preprocessingnya bang")
 

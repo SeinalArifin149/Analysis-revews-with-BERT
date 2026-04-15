@@ -1,7 +1,15 @@
 from slank import slang_dict
 import re
 
-# 1. CLEANING
+import pandas as pd
+df = pd.read_csv("Bukit jaddih.csv")
+
+df = df.drop(columns=["title","url","name","reviewUrl"])
+
+df = df.dropna(subset=["text"])  # wajib ada text
+df = df[df["text"].str.strip() != ""]  # hapus yang kosong tapi bukan NaN
+df = df.reset_index(drop=True)
+
 def clean_text(text):
     text = re.sub(r"http\S+", "", text)      # hapus URL
     text = re.sub(r"@\w+", "", text)         # hapus mention
@@ -22,6 +30,7 @@ def slank_normalization(text):
 
 # 4. PIPELINE (biar enak dipanggil)
 def preprocess(text):
+    text = str(text)    # pastikan string
     text = clean_text(text)
     text = lower(text)
     text = slank_normalization(text)
