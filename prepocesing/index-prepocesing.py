@@ -1,11 +1,11 @@
 from pathlib import Path
-from func_prepocesing import preprocess
+from func_prepocesing import preprocess, load_and_clean
 import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent
 
 print("skrip jalan bg")
-df = pd.read_csv(BASE_DIR / "Bukit jaddih.csv")
+df = load_and_clean(BASE_DIR / "Bukit jaddih.csv")
 
 # Lewati baris yang text-nya null/NaN
 df = df.dropna(subset=["text"])
