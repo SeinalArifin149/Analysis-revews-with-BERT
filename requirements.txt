@@ -2,4 +2,6 @@ sentence-transformers
 pandas
 deep-translator
 langdetect
+transformers
+torch
 emoji
