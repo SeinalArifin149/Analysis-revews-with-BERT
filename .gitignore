@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 *.json
+models/model_sentiment_binary/
+models/results/
