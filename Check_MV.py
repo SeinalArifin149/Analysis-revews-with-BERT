@@ -1,7 +1,9 @@
 import pandas as pd
 
 # baca file CSV
-df = pd.read_csv("Bukit jaddih.csv")
+# df = pd.read_csv("Wisata_Syaikhona.csv")
+# df = pd.read_csv("Taman Mangrove sepulu.csv")
+df = pd.read_csv("Bukit Jaddih(Cleaning).csv")
 print("=== CEK MISSING VALUE ===")
 print(df.isnull().sum())
 

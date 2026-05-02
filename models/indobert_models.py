@@ -1,38 +1,163 @@
 import pandas as pd
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 # ==============================
-# 1. LOAD DATA
+# 1. LOAD & CLEAN DATA
 # ==============================
 file_path = "../Bukit Jaddih(Cleaning).csv"
 df = pd.read_csv(file_path)
 
-texts = df["teks"].astype(str).tolist()
+print("Kolom dataset:", df.columns)
+
+# drop data kosong
+df = df.dropna(subset=["teks", "stars"])
+df["teks"] = df["teks"].astype(str)
 
 # ==============================
-# 2. LOAD MODEL SENTIMENT
+# 2. BUAT LABEL DARI STARS
 # ==============================
-model_name = "w11wo/indonesian-roberta-base-sentiment-classifier"
+def convert_label(star):
+    if star <= 3:
+        return 0  # negative
+    else:
+        return 1  # positive
+
+df["label"] = df["stars"].apply(convert_label)
+df["label"] = df["label"].astype(int)
+
+print("\nDistribusi label:")
+print(df["label"].value_counts())
+
+# ==============================
+# 3. SPLIT DATA
+# ==============================
+train_texts, val_texts, train_labels, val_labels = train_test_split(
+    df["teks"].tolist(),
+    df["label"].tolist(),
+    test_size=0.2,
+    random_state=42
+)
+
+# ==============================
+# 4. LOAD MODEL
+# ==============================
+model_name = "indobenchmark/indobert-base-p1"
+id2label = {0: "negative", 1: "positive"}
+label2id = {label: idx for idx, label in id2label.items()}
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+model_config = AutoConfig.from_pretrained(
+    model_name,
+    num_labels=2,
+    id2label=id2label,
+    label2id=label2id,
+)
+model = AutoModelForSequenceClassification.from_pretrained(
+    model_name,
+    config=model_config,
+    ignore_mismatched_sizes=True,
+)
 
-model.eval()
+# ==============================
+# 5. DATASET CLASS
+# ==============================
+class TextDataset(Dataset):
+    def __init__(self, texts, labels):
+        self.encodings = tokenizer(
+            texts,
+            truncation=True,
+            padding=True,
+            max_length=128
+        )
+        self.labels = labels
 
-# label mapping
+    def __getitem__(self, idx):
+        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        item["labels"] = torch.tensor(self.labels[idx])
+        return item
+
+    def __len__(self):
+        return len(self.labels)
+
+train_dataset = TextDataset(train_texts, train_labels)
+val_dataset = TextDataset(val_texts, val_labels)
+
+# ==============================
+# 6. METRICS (BIAR ADA AKURASI)
+# ==============================
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    preds = torch.argmax(torch.tensor(logits), dim=1)
+
+    precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='binary')
+    acc = accuracy_score(labels, preds)
+
+    return {
+        "accuracy": acc,
+        "f1": f1,
+        "precision": precision,
+        "recall": recall
+    }
+
+# ==============================
+# 7. TRAINING SETUP
+# ==============================
+training_args = TrainingArguments(
+    output_dir="./results",
+    learning_rate=2e-5,
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=8,
+    num_train_epochs=3,
+
+    eval_strategy="epoch",        # ✅ versi v5
+    save_strategy="epoch",        # ✅ simpan tiap epoch
+    logging_dir="./logs",
+    logging_steps=10,
+
+    load_best_model_at_end=True   # ✅ ambil model terbaik
+)
+
+# ==============================
+# 8. TRAINER
+# ==============================
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=val_dataset,
+    compute_metrics=compute_metrics
+)
+
+print("\n🔥 Mulai training...")
+trainer.train()
+
+# ==============================
+# 9. SAVE MODEL
+# ==============================
+trainer.save_model("./model_sentiment_binary")
+tokenizer.save_pretrained("./model_sentiment_binary")
+
+print("\n💪 Model selesai dilatih!")
+
+# ==============================
+# 10. PREDICT FUNCTION
+# ==============================
 label_map = {
     0: "negative",
-    1: "neutral",
-    2: "positive"
+    1: "positive"
 }
 
-print("Model siap bang 🔥")
+def predict(text):
+    if not isinstance(text, str):
+        text = str(text)
 
-# ==============================
-# 3. FUNCTION PREDICT
-# ==============================
-def predict_sentiment(text):
+    if text.strip() == "":
+        return "negative"
+
     inputs = tokenizer(
         text,
         return_tensors="pt",
@@ -45,33 +170,13 @@ def predict_sentiment(text):
         outputs = model(**inputs)
 
     logits = outputs.logits
-    pred_class = torch.argmax(logits, dim=1).item()
+    pred = torch.argmax(logits, dim=1).item()
 
-    return label_map[pred_class]
-
-# ==============================
-# 4. PROSES SEMUA DATA
-# ==============================
-results = []
-
-print("Mulai proses bang...")
-
-for i, text in enumerate(texts):
-    sentiment = predict_sentiment(text)
-    results.append(sentiment)
-
-    # tampilkan 5 data pertama
-    if i < 5:
-        print("\n======")
-        print(f"Text     : {text}")
-        print(f"Sentimen : {sentiment}")
+    return label_map[pred]
 
 # ==============================
-# 5. SIMPAN HASIL
+# 11. TEST
 # ==============================
-df["sentiment"] = results
-
-output_path = "../hasil_sentiment_indobert.csv"
-df.to_csv(output_path, index=False)
-
-print("\nSelesai bang 🔥🔥🔥")
+print("\n=== TEST ===")
+print("1:", predict("tempatnya indah banget"))  # positive
+print("2:", predict("banyak begal disini"))     # negative
