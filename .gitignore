@@ -5,3 +5,4 @@ __pycache__/
 *.json
 models/model_sentiment_binary/
 models/results/
+prepocesing/__pycache__/
