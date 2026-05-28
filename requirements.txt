@@ -9,3 +9,5 @@ emoji
 bertopic
 scikit-learn
 nltk
+streamlit
+matplotlib
