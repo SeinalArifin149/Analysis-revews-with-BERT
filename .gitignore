@@ -6,3 +6,4 @@ __pycache__/
 models/model_sentiment_binary/
 models/results/
 prepocesing/__pycache__/
+.~lock*

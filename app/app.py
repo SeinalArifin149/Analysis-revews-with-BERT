@@ -11,6 +11,7 @@ from pie_chart_topik import (
     topik_positif_chart,
     topik_negatif_chart
 )
+from word_cloud import wordcloud_negative,wordcloud_positive
 
 # ======================
 # PAGE CONFIG
@@ -99,8 +100,46 @@ elif negative_exist:
     topik_negatif_chart(filtered_df)
 
 # ======================
-# TABLE
+# WORDCLOUD
 # ======================
-st.markdown("## 📄 Tabel Data")
+st.markdown("## ☁️ Wordcloud Sentimen")
 
-st.dataframe(filtered_df, use_container_width=True)
+# cek sentiment tersedia
+positive_exist = (
+    filtered_df["hasil_sentimen"] == "positive"
+).any()
+
+negative_exist = (
+    filtered_df["hasil_sentimen"] == "negative"
+).any()
+
+# ======================
+# JIKA ADA KEDUANYA
+# ======================
+if positive_exist and negative_exist:
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        wordcloud_positive(filtered_df)
+
+    with col2:
+        wordcloud_negative(filtered_df)
+
+# ======================
+# JIKA HANYA POSITIVE
+# ======================
+elif positive_exist:
+
+    wordcloud_positive(filtered_df)
+
+# ======================
+# JIKA HANYA NEGATIVE
+# ======================
+elif negative_exist:
+
+    wordcloud_negative(filtered_df)
+
+# st.markdown("## 📄 Tabel Data")
+
+# st.dataframe(filtered_df, use_container_width=True)
