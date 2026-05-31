@@ -15,6 +15,8 @@ from bar_chart_topic import (
     topik_positif_bar_chart,
     topik_negatif_bar_chart
 )
+
+from line_chart import line_chart_sentimen_topik
 from word_cloud import wordcloud_negative, wordcloud_positive
 
 st.set_page_config(
@@ -102,7 +104,7 @@ elif positive_exist:
 elif negative_exist:
     st.markdown("### 😡 Topik Negatif")
     topik_negatif_chart(filtered_df)
-    
+
 st.markdown("## 📈 Analisis Topik Wisata (Bar Chart)")
 
 if positive_exist and negative_exist:
@@ -126,7 +128,10 @@ st.markdown("---")
 # 3. ANALISIS TOPIK WISATA (PIE CHART)
 # ========================================================
 
+
+line_chart_sentimen_topik(filtered_df)
 st.markdown("---")
+
 
 # ========================================================
 # 4. WORDCLOUD
