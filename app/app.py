@@ -72,7 +72,8 @@ st.markdown("---")
 # ========================================================
 # 1. PIE CHART SENTIMEN KESELURUHAN
 # ========================================================
-st.markdown("<h3 style='text-align: center;'>📊 Distribusi Sentimen Keseluruhan</h3>", unsafe_allow_html=True)
+# 👇 PERBAIKAN: Ditambahkan id='distribusi-sentimen-keseluruhan' agar bisa diklik
+st.markdown("<h3 id='distribusi-sentimen-keseluruhan' style='text-align: center;'>📊 Distribusi Sentimen Keseluruhan</h3>", unsafe_allow_html=True)
 
 col_kiri, col_tengah, col_kanan = st.columns([1, 2, 1])
 with col_tengah:
@@ -85,9 +86,8 @@ positive_exist = (filtered_df["hasil_sentimen"] == "positive").any()
 negative_exist = (filtered_df["hasil_sentimen"] == "negative").any()
 
 # ========================================================
-# 2. ANALISIS TOPIK WISATA (BAR CHART)
+# 2. ANALISIS TOPIK WISATA (PIE CHART)
 # ========================================================
-
 st.markdown("## 🥧 Analisis Topik Wisata (Pie Chart)")
 
 if positive_exist and negative_exist:
@@ -105,7 +105,11 @@ elif negative_exist:
     st.markdown("### 😡 Topik Negatif")
     topik_negatif_chart(filtered_df)
 
-st.markdown("## 📈 Analisis Topik Wisata (Bar Chart)")
+
+# ========================================================
+# 3. ANALISIS TOPIK WISATA (BAR CHART)
+# ========================================================
+st.markdown("## 📊 Analisis Topik Wisata (Bar Chart)")
 
 if positive_exist and negative_exist:
     col1, col2 = st.columns(2)
@@ -124,17 +128,20 @@ elif negative_exist:
 
 st.markdown("---")
 
-# ========================================================
-# 3. ANALISIS TOPIK WISATA (PIE CHART)
-# ========================================================
 
+# ========================================================
+# 4. KOMPARASI SENTIMEN PER TOPIK (LINE CHART)
+# ========================================================
+# 👇 PERBAIKAN: Judul yang hilang dimunculkan kembali agar link sidebar nyambung
+st.markdown("## 📈 Komparasi Sentimen per Topik")
 
 line_chart_sentimen_topik(filtered_df)
+
 st.markdown("---")
 
 
 # ========================================================
-# 4. WORDCLOUD
+# 5. WORDCLOUD
 # ========================================================
 st.markdown("## ☁️ Wordcloud Sentimen")
 
